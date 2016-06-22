@@ -1,8 +1,8 @@
 #define SOUND_SENSOR A0
 
-#define BUTTON_GREEN 10
+#define BUTTON_GREEN 8
 #define BUTTON_YELLOW 9
-#define BUTTON_RED 8
+#define BUTTON_RED 10
 
 #define LED_GREEN_1 25
 #define LED_GREEN_2 27
@@ -54,6 +54,7 @@ void setup(){
   pinMode(LED_RED_3, OUTPUT);
   pinMode(LED_RED_4, OUTPUT);
   pinMode(LED_RED_5, OUTPUT);
+  
   //Zet de stoplicht LEDs op output
   pinMode(LED_GREEN_STOP, OUTPUT);
   pinMode(LED_YELLOW_STOP, OUTPUT);
@@ -61,47 +62,67 @@ void setup(){
 }
 
 void loop(){
-//  checkButtons();
-   
-  int value;
-  value = analogRead(SOUND_SENSOR);
+  //Controleer of er een knop is ingedrukt
+  //Knipper anders de oranje LED
+  while(buttonState != 0){
+    //Check of er een knop wordt ingedrukt
+    checkButtons();
+     
+    //Value geeft de waarde van de sensor terug.
+    //Value kan omgezet worden in dB maar is voor dit project niet nodig.
+    int value;
+    value = analogRead(SOUND_SENSOR);
+
+    //Zet de feedback LEDs aan op basis van de waarde van de geluidssensor
+    feedbackLED(value);
+
+    /*
+     * Controleer of het geluid onder de verplichte waarde zit
+     * Als dit zo is komt er 1 punt bij de telling
+     * Als de telling gelijk is aan 100 (30 seconden op of onder de juiste waarde)
+     * voeg dan een punt toe aan het totaal puntenAantal
+     * Zet de 7 segment aan op het punten aantal
+     */
+    telling += checkCorrectheid(value, buttonState);
+    if(telling == 100){
+      telling = 0;
+      puntenAantal += 1;
+    }
+    sevenSegment(puntenAantal);     
+    delay(300);
+  }
+  digitalWrite(LED_YELLOW_STOP, HIGH);
+  delay(1200);
+  digitalWrite(LED_YELLOW_STOP, LOW);
+  delay(1200);
   
-  Serial.println(value);
-//  if(value < 8){
-//    Serial.println(" - Groen"); 
-//  }else if(value < 14){
-//    Serial.println(" - Oranje");
-//  }else{
-//    Serial.println(" - Rood");
-//  }
-
-  geluidLED(value);
-
-
-// telling += checkCorrectheid(value, buttonState);
-//  if(telling == 150){
-//    telling = 0;
-//    puntenAantal += 1;
-//  }
-   
-  delay(300);
 }
 
-//void checkButtons(){
-//  if(digitalRead(BUTTON_GREEN) == HIGH){  //Als er op de groene knop gedrukt wordt
-//    buttonState = 3;
-//    Serial.println("Groene knop ingedrukt, praten mag!");
-//  }else if(digitalRead(BUTTON_YELLOW) == HIGH){ //Als er op de gele knop gedrukt wordt
-//    buttonState = 2;
-//    Serial.println("Gele knop ingedrukt, overleggen met je buurman mag!");
-//  }else if(digitalRead(BUTTON_RED) == HIGH){ //Als er op de rode knop gedrukt wordt
-//    buttonState = 1;
-//    Serial.println("Rode knop ingedrukt, stilte!");
-//  }
-//}
+void checkButtons(){
+  //Controleer of er een knop ingedrukt wordt
+  //Zet het stoplicht LED aan op basis van de knop die ingedrukt wordt
+  if(digitalRead(BUTTON_GREEN) == HIGH){  //Groene knop is ingedrukt
+    buttonState = 3;
+    digitalWrite(LED_GREEN_STOP, HIGH);
+    digitalWrite(LED_YELLOW_STOP, LOW);
+    digitalWrite(LED_RED_STOP, LOW);
+  }else if(digitalRead(BUTTON_YELLOW) == HIGH){ //Gele knop is ingedrukt
+    buttonState = 2;
+    digitalWrite(LED_GREEN_STOP, LOW);
+    digitalWrite(LED_YELLOW_STOP, HIGH);
+    digitalWrite(LED_RED_STOP, LOW);
+  }else if(digitalRead(BUTTON_RED) == HIGH){ //Rode knop is ingedrukt
+    buttonState = 1;
+    digitalWrite(LED_GREEN_STOP, LOW);
+    digitalWrite(LED_YELLOW_STOP, LOW);
+    digitalWrite(LED_RED_STOP, HIGH);
+  }
+}
 
 int checkCorrectheid(int value, int state){
   int punten = 0;
+  
+  
   if(state = 0){
     //Geen button ingedrukt
     Serial.println("Geen button is ingedrukt");
@@ -133,8 +154,8 @@ int checkCorrectheid(int value, int state){
   return punten;
 }
 
-void geluidLED(int waarde){
-  //Zet alle LEDs uit
+void feedbackLED(int waarde){
+  //Zet alle feedback LEDs uit
   for(int i = 25; i < 55; i = i + 2){
     digitalWrite(i, LOW);
   }
@@ -160,23 +181,27 @@ void geluidLED(int waarde){
     digitalWrite(LED_YELLOW_2, HIGH);
   }if(waarde > 13){
     digitalWrite(LED_YELLOW_3, HIGH);
-  }if(waarde > 14){
-    digitalWrite(LED_YELLOW_4, HIGH);
   }if(waarde > 15){
+    digitalWrite(LED_YELLOW_4, HIGH);
+  }if(waarde > 16){
     digitalWrite(LED_YELLOW_5, HIGH);
   }
 
   //Rode LEDs
   if(waarde > 20){
     digitalWrite(LED_RED_1, HIGH);
-  }if(waarde > 27){
+  }if(waarde > 28){
     digitalWrite(LED_RED_2, HIGH);
-  }if(waarde > 35){
+  }if(waarde > 37){
     digitalWrite(LED_RED_3, HIGH);
-  }if(waarde > 44){
+  }if(waarde > 47){
     digitalWrite(LED_RED_4, HIGH);
-  }if(waarde > 54){
+  }if(waarde > 58){
     digitalWrite(LED_RED_5, HIGH);
   }  
+}
+
+void sevenSegment(int punten){
+  //Lol doe nog maar even niks
 }
 
