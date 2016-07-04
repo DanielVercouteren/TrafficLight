@@ -3,9 +3,9 @@
 //#define SOORT_SENSOR ARDUINO_PIN
 #define SOUND_SENSOR A10
 
-#define BUTTON_GREEN 3
-#define BUTTON_YELLOW 2
-#define BUTTON_RED 1
+#define BUTTON_GREEN 48
+#define BUTTON_YELLOW 50
+#define BUTTON_RED 52
 
 #define BUTTON_PAUSE 5
 
@@ -97,48 +97,50 @@ void setup(){
 void loop(){
   //Controleer of er een knop is ingedrukt
   //Knipper anders de oranje LED
-  while(buttonState != 0){
-    //wacht 600 * 5000 microsec (== 0.3 sec)
-    for(int wachtTijd = 0; wachtTijd <= 60; wachtTijd++){
-      changeDisplayNumbers(puntenAantal);
-    }
-    //Na het wachten, voer de gewone loop 1x uit
-    //Check of er een knop wordt ingedrukt
+  while(buttonState == 0){
     checkButtons();
-    Serial.println("Button ingedrukt: ");
+    pinMode(LED_GREEN_STOP, HIGH);
+    pinMode(LED_YELLOW_STOP, HIGH);
+    pinMode(LED_RED_STOP, HIGH);
+    delay(200);
+    pinMode(LED_GREEN_STOP, LOW);
+    pinMode(LED_YELLOW_STOP, LOW);
+    pinMode(LED_RED_STOP, LOW);
+    delay(200);
     Serial.println(buttonState);
-     
-    //Value geeft de waarde van de sensor terug.
-    //Value kan omgezet worden in dB maar is voor dit project niet nodig.
-//    int value = analogRead(SOUND_SENSOR);
-    int value = 15;
-    Serial.println(value);
-
-    //Zet de feedback LEDs aan op basis van de waarde van de geluidssensor
-    feedbackLED(value, buttonState);
-
-    /*
-     * Controleer of het geluid onder de verplichte waarde zit
-     * Als dit zo is komt er 1 punt bij de telling
-     * Als de telling gelijk is aan 100 (30 seconden op of onder de juiste waarde)
-     * voeg dan een punt toe aan het totaal puntenAantal
-     * Zet de 7 segment aan op het punten aantal
-     */
-    telling += checkCorrectheid(value, buttonState);
-    if(telling == 100){
-      telling = 0;
-      puntenAantal += 10;
-    }
   }
+  
+  //wacht 600 * 5000 microsec (== 0.3 sec)
+  for(int wachtTijd = 0; wachtTijd <= 60; wachtTijd++){
+    changeDisplayNumbers(puntenAantal);
+  }
+  //Na het wachten, voer de gewone loop 1x uit
+  //Check of er een knop wordt ingedrukt
   checkButtons();
-  pinMode(LED_GREEN_STOP, HIGH);
-  pinMode(LED_YELLOW_STOP, HIGH);
-  pinMode(LED_RED_STOP, HIGH);
-  delay(200);
-  pinMode(LED_GREEN_STOP, LOW);
-  pinMode(LED_YELLOW_STOP, LOW);
-  pinMode(LED_RED_STOP, LOW);
-  delay(200);
+  Serial.println("Button ingedrukt: ");
+  Serial.println(buttonState);
+   
+  //Value geeft de waarde van de sensor terug.
+  //Value kan omgezet worden in dB maar is voor dit project niet nodig.
+//    int value = analogRead(SOUND_SENSOR);
+  int value = 15;
+  Serial.println(value);
+
+  //Zet de feedback LEDs aan op basis van de waarde van de geluidssensor
+  feedbackLED(value, buttonState);
+
+  /*
+   * Controleer of het geluid onder de verplichte waarde zit
+   * Als dit zo is komt er 1 punt bij de telling
+   * Als de telling gelijk is aan 100 (30 seconden op of onder de juiste waarde)
+   * voeg dan een punt toe aan het totaal puntenAantal
+   * Zet de 7 segment aan op het punten aantal
+   */
+  telling += checkCorrectheid(value, buttonState);
+  if(telling == 50){
+    telling = 0;
+    puntenAantal += 10;
+  }
 }
 
 void checkButtons(){
@@ -164,7 +166,7 @@ void checkButtons(){
     pinMode(LED_RED_STOP, HIGH);
   }
 
-  if(digitalRead(BUTTON_PAUSE) == HIGH){
+  if(digitalRead(BUTTON_PAUSE) == LOW){
     //Als de pauzeknop in wordt gedrukt, zet dan het pauzeprogramma aan.
     //Dit betekent: alle LEDs uit en de oranje LED vervolgens laten knipperen
     buttonState = 0;
