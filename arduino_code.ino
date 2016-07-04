@@ -1,57 +1,60 @@
 //Define geluidssensor, knoppen, LEDs en display pins
-#define SOUND_SENSOR A0
 
-#define BUTTON_GREEN 10
-#define BUTTON_YELLOW 9
-#define BUTTON_RED 8
+//#define SOORT_SENSOR ARDUINO_PIN
+#define SOUND_SENSOR A10
 
-#define BUTTON_PAUSE 7
+#define BUTTON_GREEN 3
+#define BUTTON_YELLOW 2
+#define BUTTON_RED 1
 
-#define LED_GREEN_1 25
-#define LED_GREEN_2 27
-#define LED_GREEN_3 29
-#define LED_GREEN_4 31
-#define LED_GREEN_5 33
-#define LED_YELLOW_1 35
-#define LED_YELLOW_2 37
+#define BUTTON_PAUSE 5
+
+#define LED_GREEN_1 45
+#define LED_GREEN_2 47
+#define LED_GREEN_3 49
+#define LED_GREEN_4 51
+#define LED_GREEN_5 53
+#define LED_YELLOW_1 43
+#define LED_YELLOW_2 41
 #define LED_YELLOW_3 39
-#define LED_YELLOW_4 41
-#define LED_YELLOW_5 43
-#define LED_RED_1 45
-#define LED_RED_2 47
-#define LED_RED_3 49
-#define LED_RED_4 51
-#define LED_RED_5 53
+#define LED_YELLOW_4 37
+#define LED_YELLOW_5 35
+#define LED_RED_1 9
+#define LED_RED_2 10
+#define LED_RED_3 11
+#define LED_RED_4 12
+#define LED_RED_5 13
 
-#define LED_GREEN_STOP 11
-#define LED_YELLOW_STOP 12
-#define LED_RED_STOP 13
+#define LED_GREEN_STOP A0
+#define LED_YELLOW_STOP A1
+#define LED_RED_STOP A2
 
-#define segA 30
-#define segB 32
-#define segC 34
-#define segD 36
-#define segE 38
-#define segF 40
-#define segG 42
-#define d1 22
-#define d2 24
-#define d3 26
-#define d4 28
-
+#define segA 22
+#define segB 24
+#define segC 26
+#define segD 28
+#define segE 30
+#define segF 32
+#define segG 34
+#define d1 36
+#define d2 38
+#define d3 40
+#define d4 42
 
 int buttonState = 0;
 int telling = 0;
 int puntenAantal = 0;
 
+int wachtTijd = 0;
+
 void setup(){
   Serial.begin(9600);
 
   //Zet de knoppen op input
-  pinMode(BUTTON_GREEN, INPUT);
-  pinMode(BUTTON_YELLOW, INPUT);
-  pinMode(BUTTON_RED, INPUT);
-  pinMode(BUTTON_PAUSE, INPUT);
+  pinMode(BUTTON_GREEN, INPUT_PULLUP);
+  pinMode(BUTTON_YELLOW, INPUT_PULLUP);
+  pinMode(BUTTON_RED, INPUT_PULLUP);
+  pinMode(BUTTON_PAUSE, INPUT_PULLUP);
   //Zet de geluidssensor op input
   pinMode(SOUND_SENSOR, INPUT);
 
@@ -73,9 +76,9 @@ void setup(){
   pinMode(LED_RED_5, OUTPUT);
   
   //Zet de stoplicht LEDs op output
-  pinMode(LED_GREEN_STOP, OUTPUT);
-  pinMode(LED_YELLOW_STOP, OUTPUT);
-  pinMode(LED_RED_STOP, OUTPUT);  
+  pinMode(LED_GREEN_STOP, LOW);
+  pinMode(LED_YELLOW_STOP, LOW);
+  pinMode(LED_RED_STOP, LOW);
 
   //Zet alle segmenten op output
   pinMode(segA, OUTPUT);
@@ -95,13 +98,21 @@ void loop(){
   //Controleer of er een knop is ingedrukt
   //Knipper anders de oranje LED
   while(buttonState != 0){
+    //wacht 600 * 5000 microsec (== 0.3 sec)
+    for(int wachtTijd = 0; wachtTijd <= 60; wachtTijd++){
+      changeDisplayNumbers(puntenAantal);
+    }
+    //Na het wachten, voer de gewone loop 1x uit
     //Check of er een knop wordt ingedrukt
     checkButtons();
+    Serial.println("Button ingedrukt: ");
+    Serial.println(buttonState);
      
     //Value geeft de waarde van de sensor terug.
     //Value kan omgezet worden in dB maar is voor dit project niet nodig.
-    int value;
-    value = analogRead(SOUND_SENSOR);
+//    int value = analogRead(SOUND_SENSOR);
+    int value = 15;
+    Serial.println(value);
 
     //Zet de feedback LEDs aan op basis van de waarde van de geluidssensor
     feedbackLED(value, buttonState);
@@ -118,48 +129,48 @@ void loop(){
       telling = 0;
       puntenAantal += 10;
     }
-    changeDisplayNumbers(puntenAantal);
   }
   checkButtons();
-  
-  for(int i = 25; i < 55; i = i + 2){
-    digitalWrite(i, LOW);
-  }
-
-  digitalWrite(LED_YELLOW_STOP, HIGH);
-  delay(1200);
-  digitalWrite(LED_YELLOW_STOP, LOW);
-  delay(1200);
-  
+  pinMode(LED_GREEN_STOP, HIGH);
+  pinMode(LED_YELLOW_STOP, HIGH);
+  pinMode(LED_RED_STOP, HIGH);
+  delay(200);
+  pinMode(LED_GREEN_STOP, LOW);
+  pinMode(LED_YELLOW_STOP, LOW);
+  pinMode(LED_RED_STOP, LOW);
+  delay(200);
 }
 
 void checkButtons(){
   //Controleer of er een knop ingedrukt wordt
   //Zet het stoplicht LED aan op basis van de knop die ingedrukt wordt
-  if(digitalRead(BUTTON_GREEN) == HIGH){  //Groene knop is ingedrukt
+  if(digitalRead(BUTTON_GREEN) == LOW){  //Groene knop is ingedrukt
     buttonState = 3;
-    digitalWrite(LED_GREEN_STOP, HIGH);
-    digitalWrite(LED_YELLOW_STOP, LOW);
-    digitalWrite(LED_RED_STOP, LOW);
-  }else if(digitalRead(BUTTON_YELLOW) == HIGH){ //Gele knop is ingedrukt
+    Serial.println("Groene knop ingedrukt!");
+    pinMode(LED_GREEN_STOP, HIGH);
+    pinMode(LED_YELLOW_STOP, LOW);
+    pinMode(LED_RED_STOP, LOW);
+  }else if(digitalRead(BUTTON_YELLOW) == LOW){ //Gele knop is ingedrukt
     buttonState = 2;
-    digitalWrite(LED_GREEN_STOP, LOW);
-    digitalWrite(LED_YELLOW_STOP, HIGH);
-    digitalWrite(LED_RED_STOP, LOW);
-  }else if(digitalRead(BUTTON_RED) == HIGH){ //Rode knop is ingedrukt
+    Serial.println("Gele knop ingedrukt!");
+    pinMode(LED_GREEN_STOP, LOW);
+    pinMode(LED_YELLOW_STOP, HIGH);
+    pinMode(LED_RED_STOP, LOW);
+  }else if(digitalRead(BUTTON_RED) == LOW){ //Rode knop is ingedrukt
     buttonState = 1;
-    digitalWrite(LED_GREEN_STOP, LOW);
-    digitalWrite(LED_YELLOW_STOP, LOW);
-    digitalWrite(LED_RED_STOP, HIGH);
+    Serial.println("Rode knop ingedrukt!");
+    pinMode(LED_GREEN_STOP, LOW);
+    pinMode(LED_YELLOW_STOP, LOW);
+    pinMode(LED_RED_STOP, HIGH);
   }
 
   if(digitalRead(BUTTON_PAUSE) == HIGH){
     //Als de pauzeknop in wordt gedrukt, zet dan het pauzeprogramma aan.
     //Dit betekent: alle LEDs uit en de oranje LED vervolgens laten knipperen
     buttonState = 0;
-    digitalWrite(LED_GREEN_STOP, LOW);
-    digitalWrite(LED_YELLOW_STOP, LOW);
-    digitalWrite(LED_RED_STOP, LOW);
+    pinMode(LED_GREEN_STOP, LOW);
+    pinMode(LED_YELLOW_STOP, LOW);
+    pinMode(LED_RED_STOP, LOW);
   }
 }
 
@@ -329,18 +340,15 @@ void changeDisplayNumbers(int number){
     b = (number % 1000) / 100;
     c = ((number % 1000) % 100) / 10;
   }
-  displayNumber(a, b, c, d);
+  
+  writeDisplay(1,a);
+  writeDisplay(2,b);
+  writeDisplay(3,c);
+  writeDisplay(4,d);
 }
 
-void displayNumber(int a,int b,int c,int d){
-    writeDisplay(1,a);
-    writeDisplay(2,b);
-    writeDisplay(3,c);
-    writeDisplay(4,d);
-}
-
-void writeDisplay(int d,int l){
-  switch (d) {
+void writeDisplay(int segment,int number){
+  switch (segment) {
     case 0: digitalWrite(d1, LOW); //case 0 - All ON
             digitalWrite(d2, LOW);
             digitalWrite(d3, LOW);
@@ -368,7 +376,7 @@ void writeDisplay(int d,int l){
             break;
   }
 
-  switch (l){
+  switch (number){
     case 0: 
       zero();
       break;
