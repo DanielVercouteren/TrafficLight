@@ -1,13 +1,14 @@
-//Define geluidssensor, knoppen, LEDs en display pins
+/* Define geluidssensor, knoppen, LEDs en display pins
+   Definities gaan op de volgende manier:
+   #define SOORT_SENSOR ARDUINO_PIN
+*/
+#define SOUND_SENSOR A8
 
-//#define SOORT_SENSOR ARDUINO_PIN
-#define SOUND_SENSOR A10
+#define BUTTON_GREEN A4
+#define BUTTON_YELLOW A5
+#define BUTTON_RED A6
 
-#define BUTTON_GREEN 48
-#define BUTTON_YELLOW 50
-#define BUTTON_RED 52
-
-#define BUTTON_PAUSE 5
+#define BUTTON_PAUSE A15
 
 #define LED_GREEN_1 45
 #define LED_GREEN_2 47
@@ -31,7 +32,7 @@
 
 #define segA 22
 #define segB 24
-#define segC 26
+#define segC 52 //26 waarschijnlijk doorgebrand
 #define segD 28
 #define segE 30
 #define segF 32
@@ -45,16 +46,15 @@ int buttonState = 0;
 int telling = 0;
 int puntenAantal = 0;
 
-int wachtTijd = 0;
-
-void setup(){
+void setup() {
   Serial.begin(9600);
-
   //Zet de knoppen op input
+  //Maak gebruik van de pull-up methode
   pinMode(BUTTON_GREEN, INPUT_PULLUP);
   pinMode(BUTTON_YELLOW, INPUT_PULLUP);
   pinMode(BUTTON_RED, INPUT_PULLUP);
   pinMode(BUTTON_PAUSE, INPUT_PULLUP);
+
   //Zet de geluidssensor op input
   pinMode(SOUND_SENSOR, INPUT);
 
@@ -74,7 +74,7 @@ void setup(){
   pinMode(LED_RED_3, OUTPUT);
   pinMode(LED_RED_4, OUTPUT);
   pinMode(LED_RED_5, OUTPUT);
-  
+
   //Zet de stoplicht LEDs op output
   pinMode(LED_GREEN_STOP, LOW);
   pinMode(LED_YELLOW_STOP, LOW);
@@ -94,71 +94,83 @@ void setup(){
   pinMode(d4, OUTPUT);
 }
 
-void loop(){
+void loop() {
   //Controleer of er een knop is ingedrukt
   //Knipper anders de oranje LED
-  while(buttonState == 0){
-    checkButtons();
-    pinMode(LED_GREEN_STOP, HIGH);
-    pinMode(LED_YELLOW_STOP, HIGH);
-    pinMode(LED_RED_STOP, HIGH);
-    delay(200);
-    pinMode(LED_GREEN_STOP, LOW);
-    pinMode(LED_YELLOW_STOP, LOW);
-    pinMode(LED_RED_STOP, LOW);
-    delay(200);
-    Serial.println(buttonState);
+  while (buttonState == 0) {
+    if (puntenAantal == 0) {
+      checkButtons();
+      pinMode(LED_YELLOW_STOP, HIGH);
+      delay(400);
+      pinMode(LED_YELLOW_STOP, LOW);
+      delay(400);
+      Serial.println(buttonState);
+    } else {
+      pinMode(LED_YELLOW_STOP, HIGH);
+      for (int wachtTijd = 0; wachtTijd <= 60; wachtTijd++) {
+        changeDisplayNumbers(puntenAantal);
+      }
+      pinMode(LED_YELLOW_STOP, LOW);
+      for (int wachtTijd = 0; wachtTijd <= 60; wachtTijd++) {
+        changeDisplayNumbers(puntenAantal);
+      }
+      checkButtons();
+    }
   }
-  
-  //wacht 600 * 5000 microsec (== 0.3 sec)
-  for(int wachtTijd = 0; wachtTijd <= 60; wachtTijd++){
+
+  //wacht 60 * 5000 microsec (== 0.3 sec)
+  for (int wachtTijd = 0; wachtTijd <= 60; wachtTijd++) {
     changeDisplayNumbers(puntenAantal);
   }
+
   //Na het wachten, voer de gewone loop 1x uit
   //Check of er een knop wordt ingedrukt
   checkButtons();
-  Serial.println("Button ingedrukt: ");
-  Serial.println(buttonState);
-   
-  //Value geeft de waarde van de sensor terug.
-  //Value kan omgezet worden in dB maar is voor dit project niet nodig.
-//    int value = analogRead(SOUND_SENSOR);
-  int value = 15;
+
+  /*
+      Value geeft de waarde van de sensor terug.
+      Value kan omgezet worden in dB maar is voor dit project niet nodig.
+  */
+
+  int value = 0;
+  value = analogRead(SOUND_SENSOR);
   Serial.println(value);
+  Serial.println("");
 
   //Zet de feedback LEDs aan op basis van de waarde van de geluidssensor
   feedbackLED(value, buttonState);
 
   /*
-   * Controleer of het geluid onder de verplichte waarde zit
-   * Als dit zo is komt er 1 punt bij de telling
-   * Als de telling gelijk is aan 100 (30 seconden op of onder de juiste waarde)
-   * voeg dan een punt toe aan het totaal puntenAantal
-   * Zet de 7 segment aan op het punten aantal
-   */
+     Controleer of het geluid onder de verplichte waarde zit
+     Als dit zo is komt er 1 punt bij de telling
+     Als de telling gelijk is aan 50 (15 seconden op of onder de juiste waarde)
+     voeg dan een punt toe aan het totaal puntenAantal
+     Zet de 7 segment aan op het punten aantal
+  */
+
   telling += checkCorrectheid(value, buttonState);
-  if(telling == 50){
+  if (telling == 20) {
     telling = 0;
     puntenAantal += 10;
   }
 }
 
-void checkButtons(){
+void checkButtons() {
   //Controleer of er een knop ingedrukt wordt
   //Zet het stoplicht LED aan op basis van de knop die ingedrukt wordt
-  if(digitalRead(BUTTON_GREEN) == LOW){  //Groene knop is ingedrukt
+  if (digitalRead(BUTTON_GREEN) == LOW) { //Groene knop is ingedrukt
     buttonState = 3;
     Serial.println("Groene knop ingedrukt!");
     pinMode(LED_GREEN_STOP, HIGH);
     pinMode(LED_YELLOW_STOP, LOW);
     pinMode(LED_RED_STOP, LOW);
-  }else if(digitalRead(BUTTON_YELLOW) == LOW){ //Gele knop is ingedrukt
+  } else if (digitalRead(BUTTON_YELLOW) == LOW) { //Gele knop is ingedrukt
     buttonState = 2;
     Serial.println("Gele knop ingedrukt!");
     pinMode(LED_GREEN_STOP, LOW);
     pinMode(LED_YELLOW_STOP, HIGH);
     pinMode(LED_RED_STOP, LOW);
-  }else if(digitalRead(BUTTON_RED) == LOW){ //Rode knop is ingedrukt
+  } else if (digitalRead(BUTTON_RED) == LOW) { //Rode knop is ingedrukt
     buttonState = 1;
     Serial.println("Rode knop ingedrukt!");
     pinMode(LED_GREEN_STOP, LOW);
@@ -166,8 +178,8 @@ void checkButtons(){
     pinMode(LED_RED_STOP, HIGH);
   }
 
-  if(digitalRead(BUTTON_PAUSE) == LOW){
-    //Als de pauzeknop in wordt gedrukt, zet dan het pauzeprogramma aan.
+  if (digitalRead(BUTTON_PAUSE) == LOW) {
+    //Als de pauzeknop wordt ingedrukt, zet dan het pauzeprogramma aan.
     //Dit betekent: alle LEDs uit en de oranje LED vervolgens laten knipperen
     buttonState = 0;
     pinMode(LED_GREEN_STOP, LOW);
@@ -176,244 +188,247 @@ void checkButtons(){
   }
 }
 
-int checkCorrectheid(int value, int state){
-  if(state = 1 && value <= 9){
+int checkCorrectheid(int value, int state) {
+  if (state = 1 && value <= 9) {
     return 1;
-  }else if(state = 2 && value <= 16){
+  } else if (state = 2 && value <= 17) {
     return 1;
-  }else if(state = 3 && value <= 50){
+  } else if (state = 3 && value <= 50) {
     return 1;
-  }else{
+  } else {
     return 0;
   }
 }
 
-void feedbackLED(int waarde, int state){
+void feedbackLED(int waarde, int state) {
   //Zet alle feedback LEDs uit
-  for(int i = 25; i < 55; i = i + 2){
+  for (int i = 35; i <= 53; i = i + 2) {
     digitalWrite(i, LOW);
   }
-
-  /*Controleer de waarde en zet de LEDs aan op basis van deze waarde
-  * Als de rode knop is ingedrukt mag er niet gepraat worden.
-  * Met een waarde onder de 9 is het goed, boven de 9 is te hard.
-   */
-  if(state == 1){
-    //Groene LEDs  
-    if(waarde > 3){
-      digitalWrite(LED_GREEN_1, HIGH);
-      digitalWrite(LED_GREEN_2, HIGH);
-    }if(waarde > 5){
-      digitalWrite(LED_GREEN_3, HIGH);
-    }if(waarde > 7){
-      digitalWrite(LED_GREEN_4, HIGH);
-    }if(waarde > 8){
-      digitalWrite(LED_GREEN_5, HIGH);
-    }
-  
-    //Gele LEDs
-    if(waarde > 10){
-      digitalWrite(LED_YELLOW_1, HIGH);
-      digitalWrite(LED_YELLOW_2, HIGH);
-    }if(waarde > 11){
-      digitalWrite(LED_YELLOW_3, HIGH);
-      digitalWrite(LED_YELLOW_4, HIGH);
-    }if(waarde > 12){
-      digitalWrite(LED_YELLOW_5, HIGH);
-    }
-  
-    //Rode LEDs
-    if(waarde > 13){
-      digitalWrite(LED_RED_1, HIGH);
-    }if(waarde > 16){
-      digitalWrite(LED_RED_2, HIGH);
-    }if(waarde > 21){
-      digitalWrite(LED_RED_3, HIGH);
-    }if(waarde > 27){
-      digitalWrite(LED_RED_4, HIGH);
-    }if(waarde > 34){
-      digitalWrite(LED_RED_5, HIGH);
-    }  
-  }
-  
-  /*Controleer de waarde en zet de LEDs aan op basis van deze waarde
-  * Als de gele knop is ingedrukt mag er zacht overlegd worden.
-  * Met een waarde onder de 9 is het goed, boven de 9 is te hard.
-  */
-  if(state == 2){
-    //Groene LEDs  
-    if(waarde > 3){
-      digitalWrite(LED_GREEN_1, HIGH);
-    }if(waarde > 6){
-      digitalWrite(LED_GREEN_2, HIGH);
-    }if(waarde > 10){
-      digitalWrite(LED_GREEN_3, HIGH);
-    }if(waarde > 12){
-      digitalWrite(LED_GREEN_4, HIGH);
-    }if(waarde > 16){
-      digitalWrite(LED_GREEN_5, HIGH);
-    }
-  
-    //Gele LEDs
-    if(waarde > 17){
-      digitalWrite(LED_YELLOW_1, HIGH);
-      digitalWrite(LED_YELLOW_2, HIGH);
-    }if(waarde > 19){
-      digitalWrite(LED_YELLOW_3, HIGH);
-      digitalWrite(LED_YELLOW_4, HIGH);
-    }if(waarde > 21){
-      digitalWrite(LED_YELLOW_5, HIGH);
-    }
-  
-    //Rode LEDs
-    if(waarde > 22){
-      digitalWrite(LED_RED_1, HIGH);
-    }if(waarde > 27){
-      digitalWrite(LED_RED_2, HIGH);
-    }if(waarde > 33){
-      digitalWrite(LED_RED_3, HIGH);
-    }if(waarde > 40){
-      digitalWrite(LED_RED_4, HIGH);
-    }if(waarde > 48){
-      digitalWrite(LED_RED_5, HIGH);
-    }  
+  for (int j = 9; j <= 13; j++) {
+    digitalWrite(j, LOW);
   }
 
   /*Controleer de waarde en zet de LEDs aan op basis van deze waarde
-  * Als de groene knop is ingedrukt mag er  gepraat worden.
-  * Met een waarde onder de 50 is het goed, boven de 50 is te hard.
+    Als de rode knop is ingedrukt mag er niet gepraat worden.
+    Met een waarde onder de 9 is het goed, boven de 9 is te hard.
   */
-  if(state == 3){
-    //Groene LEDs  
-    if(waarde > 3){
+  if (state == 1) {
+    //Groene LEDs
+    if (waarde > 3) {
       digitalWrite(LED_GREEN_1, HIGH);
-    }if(waarde > 13){
       digitalWrite(LED_GREEN_2, HIGH);
-    }if(waarde > 23){
+    } if (waarde > 5) {
       digitalWrite(LED_GREEN_3, HIGH);
-    }if(waarde > 33){
+    } if (waarde > 7) {
       digitalWrite(LED_GREEN_4, HIGH);
-    }if(waarde > 43){
+    } if (waarde > 8) {
       digitalWrite(LED_GREEN_5, HIGH);
     }
-  
+
     //Gele LEDs
-    if(waarde > 50){
+    if (waarde > 10) {
       digitalWrite(LED_YELLOW_1, HIGH);
       digitalWrite(LED_YELLOW_2, HIGH);
-    }if(waarde > 55){
+    } if (waarde > 11) {
       digitalWrite(LED_YELLOW_3, HIGH);
       digitalWrite(LED_YELLOW_4, HIGH);
-    }if(waarde > 60){
+    } if (waarde > 12) {
       digitalWrite(LED_YELLOW_5, HIGH);
     }
-  
+
     //Rode LEDs
-    if(waarde > 62){
+    if (waarde > 13) {
       digitalWrite(LED_RED_1, HIGH);
-    }if(waarde > 65){
+    } if (waarde > 16) {
       digitalWrite(LED_RED_2, HIGH);
-    }if(waarde > 69){
+    } if (waarde > 21) {
       digitalWrite(LED_RED_3, HIGH);
-    }if(waarde > 74){
+    } if (waarde > 27) {
       digitalWrite(LED_RED_4, HIGH);
-    }if(waarde > 80){
+    } if (waarde > 34) {
       digitalWrite(LED_RED_5, HIGH);
-    }  
+    }
+  }
+
+  /*Controleer de waarde en zet de LEDs aan op basis van deze waarde
+    Als de gele knop is ingedrukt mag er zacht overlegd worden.
+    Met een waarde onder de 17 is het goed, boven de 17 is te hard.
+  */
+  if (state == 2) {
+    //Groene LEDs
+    if (waarde > 3) {
+      digitalWrite(LED_GREEN_1, HIGH);
+    } if (waarde > 6) {
+      digitalWrite(LED_GREEN_2, HIGH);
+    } if (waarde > 10) {
+      digitalWrite(LED_GREEN_3, HIGH);
+    } if (waarde > 12) {
+      digitalWrite(LED_GREEN_4, HIGH);
+    } if (waarde > 16) {
+      digitalWrite(LED_GREEN_5, HIGH);
+    }
+
+    //Gele LEDs
+    if (waarde > 17) {
+      digitalWrite(LED_YELLOW_1, HIGH);
+      digitalWrite(LED_YELLOW_2, HIGH);
+    } if (waarde > 19) {
+      digitalWrite(LED_YELLOW_3, HIGH);
+      digitalWrite(LED_YELLOW_4, HIGH);
+    } if (waarde > 21) {
+      digitalWrite(LED_YELLOW_5, HIGH);
+    }
+
+    //Rode LEDs
+    if (waarde > 22) {
+      digitalWrite(LED_RED_1, HIGH);
+    } if (waarde > 27) {
+      digitalWrite(LED_RED_2, HIGH);
+    } if (waarde > 33) {
+      digitalWrite(LED_RED_3, HIGH);
+    } if (waarde > 40) {
+      digitalWrite(LED_RED_4, HIGH);
+    } if (waarde > 48) {
+      digitalWrite(LED_RED_5, HIGH);
+    }
+  }
+
+  /*Controleer de waarde en zet de LEDs aan op basis van deze waarde
+    Als de groene knop is ingedrukt mag er  gepraat worden.
+    Met een waarde onder de 50 is het goed, boven de 50 is te hard.
+  */
+  if (state == 3) {
+    //Groene LEDs
+    if (waarde > 3) {
+      digitalWrite(LED_GREEN_1, HIGH);
+    } if (waarde > 13) {
+      digitalWrite(LED_GREEN_2, HIGH);
+    } if (waarde > 23) {
+      digitalWrite(LED_GREEN_3, HIGH);
+    } if (waarde > 33) {
+      digitalWrite(LED_GREEN_4, HIGH);
+    } if (waarde > 43) {
+      digitalWrite(LED_GREEN_5, HIGH);
+    }
+
+    //Gele LEDs
+    if (waarde > 50) {
+      digitalWrite(LED_YELLOW_1, HIGH);
+      digitalWrite(LED_YELLOW_2, HIGH);
+    } if (waarde > 55) {
+      digitalWrite(LED_YELLOW_3, HIGH);
+      digitalWrite(LED_YELLOW_4, HIGH);
+    } if (waarde > 60) {
+      digitalWrite(LED_YELLOW_5, HIGH);
+    }
+
+    //Rode LEDs
+    if (waarde > 62) {
+      digitalWrite(LED_RED_1, HIGH);
+    } if (waarde > 65) {
+      digitalWrite(LED_RED_2, HIGH);
+    } if (waarde > 69) {
+      digitalWrite(LED_RED_3, HIGH);
+    } if (waarde > 74) {
+      digitalWrite(LED_RED_4, HIGH);
+    } if (waarde > 80) {
+      digitalWrite(LED_RED_5, HIGH);
+    }
   }
 }
 
-void changeDisplayNumbers(int number){
+void changeDisplayNumbers(int number) {
   int a = 0;
   int b = 0;
   int c = 0;
   int d = 0;
-  
+
   //Alle getallen moeten gecontroleerd worden
-  if(number < 10){
+  if (number < 10) {
     d = number;
-  }else if(number >= 10 && number < 100){
+  } else if (number >= 10 && number < 100) {
     c = number / 10;
-  }else if(number >= 100 && number < 1000){
+  } else if (number >= 100 && number < 1000) {
     b = number / 100;
     c = (number % 100) / 10;
-  }else{
+  } else {
     a = number / 1000;
     b = (number % 1000) / 100;
     c = ((number % 1000) % 100) / 10;
   }
-  
-  writeDisplay(1,a);
-  writeDisplay(2,b);
-  writeDisplay(3,c);
-  writeDisplay(4,d);
+
+  writeDisplay(1, a);
+  writeDisplay(2, b);
+  writeDisplay(3, c);
+  writeDisplay(4, d);
 }
 
-void writeDisplay(int segment,int number){
+void writeDisplay(int segment, int number) {
   switch (segment) {
     case 0: digitalWrite(d1, LOW); //case 0 - All ON
-            digitalWrite(d2, LOW);
-            digitalWrite(d3, LOW);
-            digitalWrite(d4, LOW);
-            break;
+      digitalWrite(d2, LOW);
+      digitalWrite(d3, LOW);
+      digitalWrite(d4, LOW);
+      break;
     case 1: digitalWrite(d1, LOW);//case 1 - Digit Number 1
-            digitalWrite(d2, HIGH);
-            digitalWrite(d3, HIGH);
-            digitalWrite(d4, HIGH);
-            break;
+      digitalWrite(d2, HIGH);
+      digitalWrite(d3, HIGH);
+      digitalWrite(d4, HIGH);
+      break;
     case 2: digitalWrite(d1, HIGH);//case 1 - Digit Number 2
-            digitalWrite(d2, LOW);
-            digitalWrite(d3, HIGH);
-            digitalWrite(d4, HIGH);
-            break;
+      digitalWrite(d2, LOW);
+      digitalWrite(d3, HIGH);
+      digitalWrite(d4, HIGH);
+      break;
     case 3: digitalWrite(d1, HIGH);//case 1 - Digit Number 3
-            digitalWrite(d2, HIGH);
-            digitalWrite(d3, LOW);
-            digitalWrite(d4, HIGH);
-            break;
+      digitalWrite(d2, HIGH);
+      digitalWrite(d3, LOW);
+      digitalWrite(d4, HIGH);
+      break;
     case 4: digitalWrite(d1, HIGH);//case 1 - Digit Number 4
-            digitalWrite(d2, HIGH);
-            digitalWrite(d3, HIGH);
-            digitalWrite(d4, LOW);
-            break;
+      digitalWrite(d2, HIGH);
+      digitalWrite(d3, HIGH);
+      digitalWrite(d4, LOW);
+      break;
   }
 
-  switch (number){
-    case 0: 
+  switch (number) {
+    case 0:
       zero();
       break;
-    case 1: 
+    case 1:
       one();
       break;
-    case 2: 
+    case 2:
       two();
       break;
     case 3:
       three();
       break;
-    case 4: 
+    case 4:
       four();
       break;
-    case 5: 
+    case 5:
       five();
       break;
-    case 6: 
+    case 6:
       six();
       break;
-    case 7: 
+    case 7:
       seven();
       break;
-    case 8: 
+    case 8:
       eight();
       break;
-    case 9: 
+    case 9:
       nine();
       break;
   }
   delayMicroseconds(5000);
 }
 
-void zero(){
+void zero() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
@@ -423,7 +438,7 @@ void zero(){
   digitalWrite(segG, LOW);
 
 }
-void one(){
+void one() {
   digitalWrite(segA, LOW);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
@@ -432,7 +447,7 @@ void one(){
   digitalWrite(segF, LOW);
   digitalWrite(segG, LOW);
 }
-void two(){
+void two() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, LOW);
@@ -441,7 +456,7 @@ void two(){
   digitalWrite(segF, LOW);
   digitalWrite(segG, HIGH);
 }
-void three(){
+void three() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
@@ -450,7 +465,7 @@ void three(){
   digitalWrite(segF, LOW);
   digitalWrite(segG, HIGH);
 }
-void four(){
+void four() {
   digitalWrite(segA, LOW);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
@@ -459,7 +474,7 @@ void four(){
   digitalWrite(segF, HIGH);
   digitalWrite(segG, HIGH);
 }
-void five(){
+void five() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, LOW);
   digitalWrite(segC, HIGH);
@@ -468,7 +483,7 @@ void five(){
   digitalWrite(segF, HIGH);
   digitalWrite(segG, HIGH);
 }
-void six(){
+void six() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, LOW);
   digitalWrite(segC, HIGH);
@@ -477,7 +492,7 @@ void six(){
   digitalWrite(segF, HIGH);
   digitalWrite(segG, HIGH);
 }
-void seven(){
+void seven() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
@@ -486,7 +501,7 @@ void seven(){
   digitalWrite(segF, LOW);
   digitalWrite(segG, LOW);
 }
-void eight(){
+void eight() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
@@ -495,7 +510,7 @@ void eight(){
   digitalWrite(segF, HIGH);
   digitalWrite(segG, HIGH);
 }
-void nine(){
+void nine() {
   digitalWrite(segA, HIGH);
   digitalWrite(segB, HIGH);
   digitalWrite(segC, HIGH);
