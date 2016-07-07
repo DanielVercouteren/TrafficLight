@@ -99,12 +99,11 @@ void loop() {
   //Knipper anders de oranje LED
   while (buttonState == 0) {
     if (puntenAantal == 0) {
-      checkButtons();
       pinMode(LED_YELLOW_STOP, HIGH);
       delay(400);
       pinMode(LED_YELLOW_STOP, LOW);
       delay(400);
-      Serial.println(buttonState);
+      checkButtons();
     } else {
       pinMode(LED_YELLOW_STOP, HIGH);
       for (int wachtTijd = 0; wachtTijd <= 60; wachtTijd++) {
@@ -119,7 +118,7 @@ void loop() {
   }
 
   //wacht 60 * 5000 microsec (== 0.3 sec)
-  for (int wachtTijd = 0; wachtTijd <= 60; wachtTijd++) {
+  for (int wachtTijd = 0; wachtTijd <= 40; wachtTijd++) {
     changeDisplayNumbers(puntenAantal);
   }
 
@@ -149,7 +148,7 @@ void loop() {
   */
 
   telling += checkCorrectheid(value, buttonState);
-  if (telling == 20) {
+  if (telling == 50) {
     telling = 0;
     puntenAantal += 10;
   }
@@ -189,9 +188,9 @@ void checkButtons() {
 }
 
 int checkCorrectheid(int value, int state) {
-  if (state = 1 && value <= 9) {
+  if (state = 1 && value <= 10) {
     return 1;
-  } else if (state = 2 && value <= 17) {
+  } else if (state = 2 && value <= 16) {
     return 1;
   } else if (state = 3 && value <= 50) {
     return 1;
@@ -208,45 +207,47 @@ void feedbackLED(int waarde, int state) {
   for (int j = 9; j <= 13; j++) {
     digitalWrite(j, LOW);
   }
+  
+  digitalWrite(LED_GREEN_1, HIGH);
 
   /*Controleer de waarde en zet de LEDs aan op basis van deze waarde
     Als de rode knop is ingedrukt mag er niet gepraat worden.
-    Met een waarde onder de 9 is het goed, boven de 9 is te hard.
+    Met een waarde onder de 11 is het goed, boven de 11 is te hard.
   */
   if (state == 1) {
     //Groene LEDs
     if (waarde > 3) {
-      digitalWrite(LED_GREEN_1, HIGH);
       digitalWrite(LED_GREEN_2, HIGH);
     } if (waarde > 5) {
       digitalWrite(LED_GREEN_3, HIGH);
     } if (waarde > 7) {
       digitalWrite(LED_GREEN_4, HIGH);
-    } if (waarde > 8) {
+    } if (waarde > 9) {
       digitalWrite(LED_GREEN_5, HIGH);
     }
 
     //Gele LEDs
-    if (waarde > 10) {
+    if (waarde > 11) {
       digitalWrite(LED_YELLOW_1, HIGH);
       digitalWrite(LED_YELLOW_2, HIGH);
-    } if (waarde > 11) {
-      digitalWrite(LED_YELLOW_3, HIGH);
-      digitalWrite(LED_YELLOW_4, HIGH);
     } if (waarde > 12) {
+      digitalWrite(LED_YELLOW_3, HIGH);
+    } if (waarde > 13) {
+      digitalWrite(LED_YELLOW_4, HIGH);
+    } if (waarde > 14) {
       digitalWrite(LED_YELLOW_5, HIGH);
     }
 
     //Rode LEDs
-    if (waarde > 13) {
+    if (waarde > 15) {
       digitalWrite(LED_RED_1, HIGH);
-    } if (waarde > 16) {
+    } if (waarde > 18) {
       digitalWrite(LED_RED_2, HIGH);
-    } if (waarde > 21) {
+    } if (waarde > 22) {
       digitalWrite(LED_RED_3, HIGH);
-    } if (waarde > 27) {
+    } if (waarde > 26) {
       digitalWrite(LED_RED_4, HIGH);
-    } if (waarde > 34) {
+    } if (waarde > 32) {
       digitalWrite(LED_RED_5, HIGH);
     }
   }
@@ -257,11 +258,9 @@ void feedbackLED(int waarde, int state) {
   */
   if (state == 2) {
     //Groene LEDs
-    if (waarde > 3) {
-      digitalWrite(LED_GREEN_1, HIGH);
-    } if (waarde > 6) {
+    if (waarde > 6) {
       digitalWrite(LED_GREEN_2, HIGH);
-    } if (waarde > 10) {
+    } if (waarde > 9) {
       digitalWrite(LED_GREEN_3, HIGH);
     } if (waarde > 12) {
       digitalWrite(LED_GREEN_4, HIGH);
@@ -272,9 +271,11 @@ void feedbackLED(int waarde, int state) {
     //Gele LEDs
     if (waarde > 17) {
       digitalWrite(LED_YELLOW_1, HIGH);
+    } if (waarde > 18) {
       digitalWrite(LED_YELLOW_2, HIGH);
     } if (waarde > 19) {
       digitalWrite(LED_YELLOW_3, HIGH);
+    } if (waarde > 20) {
       digitalWrite(LED_YELLOW_4, HIGH);
     } if (waarde > 21) {
       digitalWrite(LED_YELLOW_5, HIGH);
@@ -283,13 +284,13 @@ void feedbackLED(int waarde, int state) {
     //Rode LEDs
     if (waarde > 22) {
       digitalWrite(LED_RED_1, HIGH);
-    } if (waarde > 27) {
+    } if (waarde > 30) {
       digitalWrite(LED_RED_2, HIGH);
-    } if (waarde > 33) {
+    } if (waarde > 38) {
       digitalWrite(LED_RED_3, HIGH);
-    } if (waarde > 40) {
+    } if (waarde > 46) {
       digitalWrite(LED_RED_4, HIGH);
-    } if (waarde > 48) {
+    } if (waarde > 54) {
       digitalWrite(LED_RED_5, HIGH);
     }
   }
@@ -300,24 +301,24 @@ void feedbackLED(int waarde, int state) {
   */
   if (state == 3) {
     //Groene LEDs
-    if (waarde > 3) {
-      digitalWrite(LED_GREEN_1, HIGH);
-    } if (waarde > 13) {
+    if (waarde > 12) {
       digitalWrite(LED_GREEN_2, HIGH);
-    } if (waarde > 23) {
+    } if (waarde > 20) {
       digitalWrite(LED_GREEN_3, HIGH);
-    } if (waarde > 33) {
+    } if (waarde > 29) {
       digitalWrite(LED_GREEN_4, HIGH);
-    } if (waarde > 43) {
+    } if (waarde > 40) {
       digitalWrite(LED_GREEN_5, HIGH);
     }
 
     //Gele LEDs
     if (waarde > 50) {
       digitalWrite(LED_YELLOW_1, HIGH);
+    } if (waarde > 52) {
       digitalWrite(LED_YELLOW_2, HIGH);
     } if (waarde > 55) {
       digitalWrite(LED_YELLOW_3, HIGH);
+    } if (waarde > 57) {
       digitalWrite(LED_YELLOW_4, HIGH);
     } if (waarde > 60) {
       digitalWrite(LED_YELLOW_5, HIGH);
@@ -425,7 +426,7 @@ void writeDisplay(int segment, int number) {
       nine();
       break;
   }
-  delayMicroseconds(5000);
+  delayMicroseconds(3500);
 }
 
 void zero() {
